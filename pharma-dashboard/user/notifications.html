@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PharmacyLink — الإشعارات</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/main.css">
+  <link rel="stylesheet" href="../css/sidebar.css">
+  <link rel="stylesheet" href="../css/notifications.css">
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-compat.js"></script>
+</head>
+<body>
+  <div class="page-loading" id="loading-overlay">
+    <div class="spinner"></div><p>جاري التحميل...</p>
+  </div>
+  <div id="app-content" style="display:none">
+    <div id="sidebar-container"></div>
+    <button class="hamburger-btn" id="hamburger-btn"><span></span><span></span><span></span></button>
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+    <main class="main-content">
+      <div class="page-header" style="flex-wrap:wrap;gap:12px">
+        <div>
+          <h1>الإشعارات 🔔</h1>
+          <p id="unread-count" style="font-size:14px;color:var(--text-muted);margin:0"></p>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <button id="btn-mark-all"
+                  class="btn btn-outline"
+                  style="font-size:13px;padding:7px 14px">
+            ✓ تحديد الكل كمقروء
+          </button>
+          <button id="btn-delete-all"
+                  class="btn"
+                  style="font-size:13px;padding:7px 14px;background:#fee2e2;color:#b91c1c;border:1px solid #fca5a5">
+            🗑️ حذف الكل
+          </button>
+        </div>
+      </div>
+
+      <!-- Permission Banner (shown if notifications not yet granted) -->
+      <div id="permission-banner" class="notif-permission-banner" style="display:none">
+        <div style="display:flex;align-items:center;gap:12px">
+          <span style="font-size:26px">🔔</span>
+          <div>
+            <div style="font-weight:700;margin-bottom:2px">فعّل الإشعارات</div>
+            <div style="font-size:13px;color:var(--text-muted)">لتصلك تنبيهات حتى عند إغلاق المتصفح</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;flex-shrink:0">
+          <button id="btn-enable-notif" class="btn btn-primary" style="font-size:13px;padding:8px 16px;white-space:nowrap">
+            تفعيل الإشعارات
+          </button>
+          <button id="btn-dismiss-banner" class="btn btn-outline" style="font-size:13px;padding:8px 12px">
+            لاحقاً
+          </button>
+        </div>
+      </div>
+
+      <!-- Notification card: tabs + list -->
+      <div class="card" style="padding:0;overflow:hidden">
+
+        <!-- Filter Tabs -->
+        <div class="notif-filter-tabs">
+          <button class="notif-filter-tab active" data-filter="all">🔔 الكل</button>
+          <button class="notif-filter-tab" data-filter="order">📦 الطلبات</button>
+          <button class="notif-filter-tab" data-filter="dose">💊 الجرعات</button>
+          <button class="notif-filter-tab" data-filter="favorite">🆕 المفضلة</button>
+          <button class="notif-filter-tab" data-filter="chat">💬 الرسائل</button>
+        </div>
+
+        <!-- List -->
+        <div id="notif-list">
+          <div style="padding:40px;text-align:center;color:var(--text-muted)">
+            <div style="width:32px;height:32px;border:3px solid var(--primary);border-top-color:transparent;border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 12px"></div>
+            جاري التحميل...
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <script src="../js/firebase-config.js"></script>
+  <script src="../js/mock-data.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/notifications.js"></script>
+  <script src="../js/cart.js"></script>
+  <script src="../js/user/sidebar.js"></script>
+  <script src="../js/user/notifications.js"></script>
+  <script>
+    initAuth('user', () => {
+      renderUserSidebar();
+      seedDemoNotifications();
+      seedMockDoses();
+      seedFavMedicines();
+      initNotificationsPage();
+    });
+  </script>
+</body>
+</html>

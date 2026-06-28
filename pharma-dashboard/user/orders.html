@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PharmacyLink — طلباتي</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/main.css"><link rel="stylesheet" href="../css/sidebar.css">
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+  <div class="page-loading" id="loading-overlay"><div class="spinner"></div><p>جاري التحميل...</p></div>
+  <div id="app-content" style="display:none">
+    <div id="sidebar-container"></div>
+    <button class="hamburger-btn" id="hamburger-btn"><span></span><span></span><span></span></button>
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+    <main class="main-content">
+      <div class="page-header"><h1>طلباتي</h1><p>متابعة وتفاصيل طلباتك</p></div>
+      <!-- Status distribution mini-chart -->
+      <div style="display:flex;align-items:center;gap:20px;margin-bottom:16px">
+        <div style="width:110px;height:110px;flex-shrink:0">
+          <canvas id="user-status-chart"></canvas>
+        </div>
+        <div id="user-status-legend" style="font-size:12px;line-height:1.9;color:#374151"></div>
+      </div>
+
+      <div class="filter-tabs" id="order-tabs">
+        <button class="filter-tab active" data-status="">الكل</button>
+        <button class="filter-tab" data-status="pending">في الانتظار</button>
+        <button class="filter-tab" data-status="confirmed">مؤكد</button>
+        <button class="filter-tab" data-status="processing">قيد التحضير</button>
+        <button class="filter-tab" data-status="ready">جاهز</button>
+        <button class="filter-tab" data-status="delivered">مُسلَّم</button>
+        <button class="filter-tab" data-status="cancelled">ملغي</button>
+      </div>
+      <div id="orders-container" class="orders-grid"></div>
+    </main>
+  </div>
+
+  <!-- Order Detail Modal -->
+  <div class="modal-overlay" id="order-modal">
+    <div class="modal modal-lg">
+      <div class="modal-header"><h3>تفاصيل الطلب</h3><button class="modal-close" id="modal-close">✕</button></div>
+      <div class="modal-body" id="order-detail-body"></div>
+      <div class="modal-footer"><button class="btn btn-ghost" id="modal-cancel">إغلاق</button></div>
+    </div>
+  </div>
+
+  <script src="../js/firebase-config.js"></script>
+  <script src="../js/mock-data.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/cart.js"></script>
+  <script src="../js/user/sidebar.js"></script>
+  <script src="../js/user/orders.js"></script>
+  <script>initAuth('user', () => { renderUserSidebar(); initUserOrders(); });</script>
+</body>
+</html>

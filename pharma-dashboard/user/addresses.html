@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PharmacyLink — عناويني</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/main.css"><link rel="stylesheet" href="../css/sidebar.css">
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+</head>
+<body>
+  <div class="page-loading" id="loading-overlay"><div class="spinner"></div><p>جاري التحميل...</p></div>
+  <div id="app-content" style="display:none">
+    <div id="sidebar-container"></div>
+    <button class="hamburger-btn" id="hamburger-btn"><span></span><span></span><span></span></button>
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+    <main class="main-content">
+      <div class="page-header"><h1>عناويني</h1><p>إدارة عناوين التوصيل</p></div>
+      <div style="margin-bottom:16px;display:flex;justify-content:flex-end">
+        <button id="btn-add-addr" class="btn btn-primary">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          إضافة عنوان
+        </button>
+      </div>
+      <div id="addresses-list" class="addr-grid"></div>
+    </main>
+  </div>
+
+  <!-- Add/Edit Address Modal -->
+  <div class="modal-overlay" id="addr-modal">
+    <div class="modal">
+      <div class="modal-header"><h3 id="addr-modal-title">إضافة عنوان</h3><button class="modal-close" id="addr-modal-close">✕</button></div>
+      <div class="modal-body">
+        <form id="addr-form" novalidate>
+          <div class="form-group"><label>التسمية <span class="required">*</span></label><input type="text" id="af-label" class="form-control" placeholder="المنزل، العمل..."></div>
+          <div class="form-group">
+            <label>المحافظة <span class="required">*</span></label>
+            <select id="af-gov" class="form-control">
+              <option value="">اختر المحافظة</option>
+              <option>نابلس</option><option>رام الله</option><option>جنين</option>
+              <option>الخليل</option><option>بيت لحم</option><option>طولكرم</option>
+              <option>قلقيلية</option><option>أريحا</option><option>سلفيت</option><option>أخرى</option>
+            </select>
+          </div>
+          <div class="form-group"><label>الحي / المنطقة <span class="required">*</span></label><input type="text" id="af-area" class="form-control" placeholder="حي الزيتون..."></div>
+          <div class="form-group"><label>الشارع والمبنى</label><input type="text" id="af-street" class="form-control" placeholder="شارع فلسطين، بناية 5..."></div>
+          <div class="form-group"><label>ملاحظات للتوصيل</label><textarea id="af-notes" class="form-control" placeholder="الطابق الثالث، شقة 6..."></textarea></div>
+          <div class="form-group" style="display:flex;align-items:center;gap:10px">
+            <input type="checkbox" id="af-default" style="width:16px;height:16px;cursor:pointer">
+            <label for="af-default" style="cursor:pointer;margin:0">تعيين كعنوان افتراضي</label>
+          </div>
+          <p id="addr-msg" style="min-height:18px"></p>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" id="addr-modal-cancel">إلغاء</button>
+        <button class="btn btn-primary" id="addr-modal-save">حفظ</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/firebase-config.js"></script>
+  <script src="../js/mock-data.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/user/sidebar.js"></script>
+  <script src="../js/user/addresses.js"></script>
+  <script>initAuth('user', () => { renderUserSidebar(); initAddresses(); });</script>
+</body>
+</html>

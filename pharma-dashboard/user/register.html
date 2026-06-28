@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PharmacyLink — إنشاء حساب</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/main.css">
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+</head>
+<body>
+  <div class="auth-page">
+    <div class="auth-card">
+      <div class="auth-logo">
+        <span class="logo-emoji">💊</span>
+        <h1>PharmacyLink</h1>
+        <p>إنشاء حساب جديد</p>
+      </div>
+
+      <div id="demo-note" style="display:none;background:#F0FDF4;border:1px solid #BBF7D0;border-radius:8px;padding:10px 14px;font-size:12px;color:#166534;margin-bottom:16px;text-align:center">
+        🟢 <strong>وضع العرض</strong> — سيتم إنشاء حساب تجريبي فوراً
+      </div>
+
+      <form id="register-form" novalidate>
+        <div class="form-group">
+          <label>الاسم الكامل <span class="required">*</span></label>
+          <input type="text" id="reg-name" class="form-control" placeholder="أحمد محمود" autocomplete="name" required>
+        </div>
+        <div class="form-group">
+          <label>البريد الإلكتروني <span class="required">*</span></label>
+          <input type="email" id="reg-email" class="form-control" placeholder="user@example.com" autocomplete="email" required>
+        </div>
+        <div class="form-group">
+          <label>رقم الهاتف <span class="required">*</span></label>
+          <input type="tel" id="reg-phone" class="form-control" placeholder="0599XXXXXX" autocomplete="tel" required>
+        </div>
+        <div class="form-group">
+          <label>كلمة المرور <span class="required">*</span></label>
+          <input type="password" id="reg-password" class="form-control" placeholder="8 أحرف على الأقل" autocomplete="new-password" required>
+        </div>
+        <div class="form-group">
+          <label>تأكيد كلمة المرور <span class="required">*</span></label>
+          <input type="password" id="reg-confirm" class="form-control" placeholder="••••••••" autocomplete="new-password" required>
+        </div>
+        <button type="submit" id="reg-btn" class="btn btn-primary btn-full btn-lg">إنشاء الحساب</button>
+        <p id="reg-error" class="error-msg" style="text-align:center;min-height:20px;margin-top:10px"></p>
+      </form>
+
+      <div class="auth-footer">
+        <p>لديك حساب؟ <a href="login.html">تسجيل الدخول</a></p>
+        <a href="../index.html" style="font-size:13px;color:var(--text-muted)">← العودة للرئيسية</a>
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/firebase-config.js"></script>
+  <script src="../js/mock-data.js"></script>
+  <script src="../js/auth.js"></script>
+  <script>
+    if (DEMO_MODE) document.getElementById('demo-note').style.display = 'block';
+
+    document.getElementById('register-form').addEventListener('submit', e => {
+      e.preventDefault();
+      const name     = document.getElementById('reg-name').value.trim();
+      const email    = document.getElementById('reg-email').value.trim();
+      const phone    = document.getElementById('reg-phone').value.trim();
+      const password = document.getElementById('reg-password').value;
+      const confirm  = document.getElementById('reg-confirm').value;
+      const errEl    = document.getElementById('reg-error');
+      const btn      = document.getElementById('reg-btn');
+
+      if (!name || !email || !phone || !password || !confirm) {
+        errEl.textContent = 'يرجى ملء جميع الحقول.'; return;
+      }
+      if (password.length < 8) {
+        errEl.textContent = 'كلمة المرور يجب أن تكون 8 أحرف على الأقل.'; return;
+      }
+      if (password !== confirm) {
+        errEl.textContent = 'كلمتا المرور غير متطابقتين.'; return;
+      }
+      if (!phone.match(/^0[5-9]\d{8}$/)) {
+        errEl.textContent = 'يرجى إدخال رقم هاتف فلسطيني صحيح.'; return;
+      }
+      errEl.textContent = '';
+      registerUser(email, password, name, phone, 'reg-error', btn);
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,34 @@
+# Claude Code
+.claude/
+CLAUDE.md
+
+# Firebase (لا ترفع config حقيقي أبداً)
+# firebase-config.js   ← بس لو حطيت فيه قيم حقيقية
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+npm-debug.log*
+
+# Dependencies (لو استخدمت npm لاحقاً)
+node_modules/
+package-lock.json
+
+# Build output
+dist/
+build/
+
+# Environment variables
+.env
+.env.local
+.env.production

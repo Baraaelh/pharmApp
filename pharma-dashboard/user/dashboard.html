@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PharmacyLink — لوحة المستخدم</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/main.css"><link rel="stylesheet" href="../css/sidebar.css">
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+</head>
+<body>
+  <div class="page-loading" id="loading-overlay"><div class="spinner"></div><p>جاري التحميل...</p></div>
+  <div id="app-content" style="display:none">
+    <div id="sidebar-container"></div>
+    <button class="hamburger-btn" id="hamburger-btn"><span></span><span></span><span></span></button>
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+    <main class="main-content">
+      <div class="page-header">
+        <h1 id="user-greeting">مرحباً 👋</h1>
+        <p id="user-date"></p>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="quick-actions" id="quick-actions">
+        <a href="scanner.html" class="quick-action-card">
+          <span class="qa-icon">🔍</span><span>مسح روشتة</span>
+        </a>
+        <a href="chatbot.html" class="quick-action-card">
+          <span class="qa-icon">🤖</span><span>مساعد AI</span>
+        </a>
+        <a href="orders.html" class="quick-action-card">
+          <span class="qa-icon">🛒</span><span>طلباتي</span>
+        </a>
+        <a href="doses.html" class="quick-action-card">
+          <span class="qa-icon">💊</span><span>جرعاتي</span>
+        </a>
+      </div>
+
+      <!-- Next Dose Banner -->
+      <div id="next-dose-banner" style="display:none" class="next-dose-card">
+        <div class="nd-icon">⏰</div>
+        <div class="nd-info">
+          <div class="nd-label">الجرعة القادمة</div>
+          <div class="nd-name" id="nd-name"></div>
+          <div class="nd-time" id="nd-time"></div>
+        </div>
+        <a href="doses.html" class="btn btn-sm btn-outline">عرض الكل</a>
+      </div>
+
+      <div class="two-col">
+        <!-- Recent Orders -->
+        <div class="card">
+          <div class="section-header"><h2>آخر الطلبات</h2><a href="orders.html" class="btn btn-sm btn-outline">عرض الكل →</a></div>
+          <ul class="order-list" id="recent-orders-list"></ul>
+        </div>
+
+        <!-- Active Doses -->
+        <div class="card">
+          <div class="section-header"><h2>الجرعات النشطة</h2><a href="doses.html" class="btn btn-sm btn-outline">إدارة →</a></div>
+          <ul class="dose-list" id="dose-list"></ul>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="../js/firebase-config.js"></script>
+  <script src="../js/mock-data.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/user/sidebar.js"></script>
+  <script src="../js/user/dashboard.js"></script>
+  <script>initAuth('user', () => { renderUserSidebar(); initUserDashboard(); });</script>
+</body>
+</html>

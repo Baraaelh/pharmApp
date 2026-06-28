@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>Test Setup → Pharmacies</title>
+  <style>
+    body { font-family: sans-serif; padding: 40px; background: #f0f4f8; }
+    h2   { color: #1A7B4B; }
+    .log { background: white; padding: 20px; border-radius: 10px; margin-top: 16px; font-size: 13px; line-height: 2.2; border: 1px solid #e5e7eb; }
+    .ok  { color: #1A7B4B; font-weight: 600; }
+    .info { color: #0ea5e9; }
+    .box { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 14px; margin-top: 14px; font-size: 13px; }
+    table { border-collapse: collapse; width: 100%; margin-top: 8px; }
+    td    { padding: 4px 10px; border-bottom: 1px solid #e5e7eb; }
+    td:first-child { color: #6b7280; width: 140px; }
+    td:last-child  { font-weight: 700; }
+  </style>
+</head>
+<body>
+  <h2>🧪 إعداد بيانات الاختبار — صفحة الصيدليات</h2>
+  <div class="log" id="log"></div>
+
+  <script>
+    const log = document.getElementById('log');
+    function line(msg, cls='ok') {
+      log.innerHTML += `<div class="${cls}">${cls==='ok'?'✅':cls==='info'?'ℹ️':'❌'} ${msg}</div>`;
+    }
+
+    // 1. GPS: clear so we can test home-address preference clearly
+    localStorage.removeItem('pharma_user_lat');
+    localStorage.removeItem('pharma_user_lng');
+    line('تم مسح إحداثيات GPS (لاختبار خيار "المنزل" بوضوح)', 'ok');
+
+    // 2. City (for subtitle label)
+    localStorage.setItem('pharma_user_city', 'نابلس');
+    line('المدينة: نابلس', 'ok');
+
+    // 3. Log what the home address will resolve to
+    // mockAddresses[0] = { label:'المنزل', governorate:'نابلس', area:'نابلس البلد' }
+    // CITY_COORDS['نابلس'] = { lat: 32.2211, lng: 35.2544 }
+    line('عنوان المنزل المحفوظ: <strong>نابلس البلد — شارع الحمرا</strong>', 'ok');
+    line('إحداثيات المنزل المتوقعة من CITY_COORDS: <strong>32.2211, 35.2544</strong>', 'info');
+
+    // 4. Expected pharmacy distances from Nablus (32.2211, 35.2544)
+    const pharmacies = [
+      { name:'صيدلية الشفاء',    lat:32.2211, lng:35.2544 },  // ph1 - Nablus
+      { name:'صيدلية الأمل',    lat:31.9038, lng:35.2034 },  // ph2 - Ramallah
+      { name:'صيدلية النور',    lat:32.4616, lng:35.2946 },  // ph3 - Jenin
+      { name:'صيدلية العافية',  lat:31.5326, lng:35.0998 },  // ph4 - Hebron
+      { name:'صيدلية الحياة',   lat:32.3104, lng:35.0286 },  // ph5 - Tulkarm
+    ];
+    const R = 6371;
+    function dist(lat1,lng1,lat2,lng2){
+      const dLat=(lat2-lat1)*Math.PI/180, dLng=(lng2-lng1)*Math.PI/180;
+      const a=Math.sin(dLat/2)**2+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2;
+      return (R*2*Math.asin(Math.sqrt(a))).toFixed(1);
+    }
+    const ref = { lat:32.2211, lng:35.2544 };
+    let tableHtml = '<div class="box"><strong>المسافات المتوقعة من المنزل (نابلس):</strong><table>';
+    const sorted = pharmacies.map(p=>({...p, d:parseFloat(dist(ref.lat,ref.lng,p.lat,p.lng))})).sort((a,b)=>a.d-b.d);
+    sorted.forEach((p,i) => { tableHtml += `<tr><td>${i+1}. ${p.name}</td><td>${p.d} كم</td></tr>`; });
+    tableHtml += '</table></div>';
+    log.innerHTML += tableHtml;
+
+    // 5. Redirect
+    let n = 2;
+    const t = setInterval(()=>{
+      log.innerHTML += `<div style="color:#9ca3af;font-size:12px">الانتقال للصيدليات خلال ${n--} ثانية...</div>`;
+      if(n<0){ clearInterval(t); window.location.href='pharmacies.html'; }
+    }, 1000);
+  </script>
+</body>
+</html>

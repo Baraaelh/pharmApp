@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PharmacyLink — الرئيسية</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/main.css">
+  <link rel="stylesheet" href="../css/sidebar.css">
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+  <div class="page-loading" id="loading-overlay"><div class="spinner"></div><p>جاري التحميل...</p></div>
+  <div id="app-content" style="display:none">
+    <div id="sidebar-container"></div>
+    <button class="hamburger-btn" id="hamburger-btn"><span></span><span></span><span></span></button>
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+    <main class="main-content">
+      <div class="page-header">
+        <h1 id="dash-greeting">مرحباً 👋</h1>
+        <p id="dash-date"></p>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-icon green">💰</div><div><div class="stat-label">إيرادات اليوم</div><div class="stat-value" id="s-revenue">—</div><div class="stat-trend up" id="s-revenue-trend"></div></div></div>
+        <div class="stat-card"><div class="stat-icon blue">🛒</div><div><div class="stat-label">طلبات اليوم</div><div class="stat-value" id="s-orders">—</div></div></div>
+        <div class="stat-card"><div class="stat-icon yellow">⚠️</div><div><div class="stat-label">تنبيهات المخزون</div><div class="stat-value" id="s-alerts">—</div></div></div>
+        <div class="stat-card"><div class="stat-icon green">💊</div><div><div class="stat-label">إجمالي المنتجات</div><div class="stat-value" id="s-products">—</div></div></div>
+      </div>
+
+      <!-- Charts -->
+      <div class="charts-row">
+        <div class="chart-card"><h3>الإيرادات الأسبوعية (₪)</h3><canvas id="revenue-chart" height="120"></canvas></div>
+        <div class="chart-card"><h3>المبيعات حسب الفئة</h3><canvas id="category-chart"></canvas></div>
+      </div>
+
+      <!-- Bottom two cols -->
+      <div class="two-col">
+        <div class="card">
+          <div class="section-header">
+            <h2>آخر الطلبات</h2>
+            <a href="orders.html" class="btn btn-sm btn-outline">عرض الكل →</a>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>رقم الطلب</th><th>العميل</th><th>الإجمالي</th><th>الحالة</th><th>الوقت</th></tr></thead>
+              <tbody id="recent-orders-body"><tr><td colspan="5"><div class="loading-state"><div class="spinner"></div></div></td></tr></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card">
+          <div class="section-header">
+            <h2>تنبيهات المخزون</h2>
+            <a href="inventory.html" class="btn btn-sm btn-outline">إدارة →</a>
+          </div>
+          <ul class="alert-list" id="low-stock-list"><li><div class="loading-state"><div class="spinner spinner-sm" style="margin:auto"></div></div></li></ul>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="../js/firebase-config.js"></script>
+  <script src="../js/mock-data.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/pharmacist/sidebar.js"></script>
+  <script src="../js/pharmacist/dashboard.js"></script>
+  <script>initAuth('pharmacist', u => { renderPharmacistSidebar(); initPharmacistDashboard(); });</script>
+</body>
+</html>

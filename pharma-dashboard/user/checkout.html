@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PharmacyLink — إتمام الطلب</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/main.css">
+  <link rel="stylesheet" href="../css/sidebar.css">
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+</head>
+<body>
+  <div class="page-loading" id="loading-overlay"><div class="spinner"></div><p>جاري التحميل...</p></div>
+  <div id="app-content" style="display:none">
+    <div id="sidebar-container"></div>
+    <button class="hamburger-btn" id="hamburger-btn"><span></span><span></span><span></span></button>
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+    <main class="main-content">
+      <div class="page-header">
+        <h1>إتمام الطلب 🛒</h1>
+      </div>
+
+      <!-- Stepper -->
+      <div class="checkout-steps">
+        <div class="step checkout-step active" data-step="1">
+          <div class="step-number">1</div>
+          <span>مراجعة الطلب</span>
+        </div>
+        <div class="step-line"></div>
+        <div class="step checkout-step" data-step="2">
+          <div class="step-number">2</div>
+          <span>عنوان التوصيل</span>
+        </div>
+        <div class="step-line"></div>
+        <div class="step checkout-step" data-step="3">
+          <div class="step-number">3</div>
+          <span>طريقة الدفع</span>
+        </div>
+      </div>
+
+      <!-- Main layout: content + summary sidebar -->
+      <div id="checkout-layout" style="display:grid;grid-template-columns:1fr 300px;gap:20px;align-items:flex-start">
+
+        <div id="checkout-main">
+
+          <!-- ─── Step 1: Order Review ─── -->
+          <div class="checkout-panel card" data-step="1">
+            <h3 style="font-size:16px;font-weight:700;margin-bottom:14px">مراجعة الطلب</h3>
+            <div style="padding:10px 14px;background:var(--primary-50);border-radius:8px;font-size:13px;margin-bottom:14px">
+              🏪 <strong id="pharmacy-info-name"></strong>
+              &nbsp;
+              <a id="pharmacy-info-phone" href="#" style="color:var(--primary);font-weight:600"></a>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>الدواء</th>
+                    <th>الكمية</th>
+                    <th>السعر</th>
+                    <th>الإجمالي</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody id="order-items"></tbody>
+              </table>
+            </div>
+            <div style="margin-top:20px;text-align:left">
+              <button class="btn btn-primary" onclick="_nextStep()">متابعة ←</button>
+            </div>
+          </div>
+
+          <!-- ─── Step 2: Address ─── -->
+          <div class="checkout-panel card" data-step="2" style="display:none">
+            <h3 style="font-size:16px;font-weight:700;margin-bottom:14px">عنوان التوصيل</h3>
+            <div id="addresses-list"></div>
+            <a href="addresses.html" style="font-size:13px;color:var(--primary);display:inline-block;margin-top:10px">
+              + إضافة عنوان جديد
+            </a>
+            <div style="margin-top:20px;display:flex;gap:10px;justify-content:space-between">
+              <button class="btn btn-ghost" onclick="_goStep(1)">→ رجوع</button>
+              <button class="btn btn-primary" onclick="_nextStep()">متابعة ←</button>
+            </div>
+          </div>
+
+          <!-- ─── Step 3: Payment ─── -->
+          <div class="checkout-panel card" data-step="3" style="display:none">
+            <h3 style="font-size:16px;font-weight:700;margin-bottom:16px">طريقة الدفع</h3>
+
+            <!-- Cash on Delivery -->
+            <div id="cash-card" onclick="_setPayment('cash')"
+                 style="border:2px solid var(--border);border-radius:var(--radius);padding:16px;cursor:pointer;margin-bottom:12px;transition:border-color .15s">
+              <div style="display:flex;align-items:center;gap:14px">
+                <span style="font-size:30px">💵</span>
+                <div>
+                  <div style="font-weight:700;font-size:15px">الدفع عند الاستلام</div>
+                  <div style="font-size:13px;color:var(--text-muted)">ادفع نقداً عند استلام طلبك</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- USSD Payment -->
+            <div id="ussd-card" onclick="_setPayment('ussd')"
+                 style="border:2px solid var(--border);border-radius:var(--radius);padding:16px;cursor:pointer;margin-bottom:12px;transition:border-color .15s">
+              <div style="display:flex;align-items:center;gap:14px">
+                <span style="font-size:30px">📱</span>
+                <div>
+                  <div style="font-weight:700;font-size:15px">USSD — دفع جوال</div>
+                  <div style="font-size:13px;color:var(--text-muted)">ادفع عبر رمز USSD من هاتفك مباشرةً</div>
+                </div>
+              </div>
+
+              <!-- USSD details (shown when selected) -->
+              <div id="ussd-details" style="display:none;margin-top:14px;padding:14px;background:var(--bg);border-radius:8px">
+
+                <!-- Dial code box -->
+                <div style="text-align:center;margin-bottom:14px">
+                  <div style="font-size:12px;color:var(--text-muted);margin-bottom:6px">اتصل بهذا الرمز من هاتفك</div>
+                  <div id="ussd-code"
+                       style="font-size:26px;font-weight:800;letter-spacing:3px;color:var(--primary);background:white;border:2px solid var(--primary);border-radius:12px;padding:12px 20px;display:inline-block;direction:ltr">
+                    *724*0.00#
+                  </div>
+                  <button onclick="event.stopPropagation();_copyUssd()"
+                          style="display:block;margin:8px auto 0;background:none;border:none;color:var(--primary);cursor:pointer;font-size:13px;font-family:inherit">
+                    📋 نسخ الرمز
+                  </button>
+                </div>
+
+                <!-- Steps -->
+                <ol style="padding-right:18px;margin:0 0 14px;font-size:13px;line-height:2;color:var(--text)">
+                  <li>افتح هاتفك واتصل بالرمز أعلاه</li>
+                  <li>اتبع التعليمات على شاشتك وأكّد الدفع</li>
+                  <li>احفظ رقم المرجع الذي تظهره الرسالة</li>
+                  <li>أدخل رقم المرجع في الحقل أدناه</li>
+                </ol>
+
+                <!-- Reference number input -->
+                <div>
+                  <label style="font-size:13px;font-weight:600;display:block;margin-bottom:6px">
+                    رقم مرجع العملية <span style="color:#ef4444">*</span>
+                  </label>
+                  <input type="text" id="ussd-ref"
+                         onclick="event.stopPropagation()"
+                         placeholder="مثال: 20241234567"
+                         maxlength="20"
+                         style="width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit;direction:ltr;text-align:center">
+                  <p style="font-size:12px;color:var(--text-muted);margin-top:6px">
+                    يمكنك إيجاد رقم المرجع في رسالة SMS التأكيد
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Bank Transfer -->
+            <div id="bank-card" onclick="_setPayment('bank')"
+                 style="border:2px solid var(--border);border-radius:var(--radius);padding:16px;cursor:pointer;transition:border-color .15s">
+              <div style="display:flex;align-items:center;gap:14px">
+                <span style="font-size:30px">🏦</span>
+                <div>
+                  <div style="font-weight:700;font-size:15px">تحويل بنكي</div>
+                  <div style="font-size:13px;color:var(--text-muted)">حوّل المبلغ وارفع إيصال التحويل</div>
+                </div>
+              </div>
+
+              <!-- Bank details (shown when bank selected) -->
+              <div id="bank-details" style="display:none;margin-top:14px;padding:14px;background:var(--bg);border-radius:8px;font-size:13px">
+                <table style="width:100%;border-collapse:separate;border-spacing:0 5px">
+                  <tr>
+                    <td style="color:var(--text-muted);white-space:nowrap;padding-left:12px">اسم البنك:</td>
+                    <td style="font-weight:600">بنك فلسطين</td>
+                  </tr>
+                  <tr>
+                    <td style="color:var(--text-muted);white-space:nowrap;padding-left:12px">رقم الحساب:</td>
+                    <td style="font-weight:600">1234-5678-9012</td>
+                  </tr>
+                  <tr>
+                    <td style="color:var(--text-muted);white-space:nowrap;padding-left:12px">اسم الحساب:</td>
+                    <td style="font-weight:600" id="bank-pharmacy-name">—</td>
+                  </tr>
+                  <tr>
+                    <td style="color:var(--text-muted);white-space:nowrap;padding-left:12px">المبلغ:</td>
+                    <td style="font-weight:800;color:var(--primary)" id="bank-amount">—</td>
+                  </tr>
+                </table>
+
+                <div style="margin-top:14px">
+                  <div style="font-size:13px;font-weight:600;margin-bottom:8px">ارفع صورة إيصال التحويل</div>
+                  <div class="upload-receipt-zone" id="receipt-zone" onclick="document.getElementById('receipt-input').click()">
+                    <span style="font-size:36px;display:block;margin-bottom:8px">📤</span>
+                    <div style="font-weight:600;margin-bottom:4px">اضغط لاختيار صورة الإيصال</div>
+                    <div style="font-size:12px;color:var(--text-muted)">JPG أو PNG</div>
+                  </div>
+                  <div id="receipt-preview-wrap" style="display:none;margin-top:10px;text-align:center">
+                    <img id="receipt-preview" style="max-width:100%;max-height:200px;object-fit:contain;border-radius:8px;border:1px solid var(--border)">
+                    <button onclick="_removeReceipt()"
+                            style="display:block;margin:6px auto 0;background:none;border:none;color:#ef4444;cursor:pointer;font-size:13px">
+                      ✕ إزالة الإيصال
+                    </button>
+                  </div>
+                  <input type="file" id="receipt-input" accept="image/jpeg,image/png" style="display:none">
+                  <p style="font-size:12px;color:var(--text-muted);margin-top:8px">
+                    سيتم تأكيد طلبك بعد التحقق من التحويل خلال ساعة
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div style="margin-top:20px;display:flex;gap:10px;justify-content:space-between">
+              <button class="btn btn-ghost" onclick="_goStep(2)">→ رجوع</button>
+              <button id="confirm-btn" class="btn btn-primary btn-lg" onclick="_confirmOrder()">
+                ✓ تأكيد الطلب
+              </button>
+            </div>
+          </div>
+
+        </div><!-- /checkout-main -->
+
+        <!-- ─── Order Summary Sidebar ─── -->
+        <div class="card" style="position:sticky;top:20px">
+          <h3 style="font-size:15px;font-weight:700;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--border)">
+            ملخص الطلب
+          </h3>
+          <div id="summary-items" style="margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--border)"></div>
+          <div style="display:flex;justify-content:space-between;font-size:13px;padding:4px 0">
+            <span style="color:var(--text-muted)">المجموع الفرعي</span>
+            <span id="summary-subtotal" style="font-weight:600">₪0.00</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:13px;padding:4px 0;margin-bottom:12px">
+            <span style="color:var(--text-muted)">رسوم التوصيل</span>
+            <span>₪5.00</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;padding:12px 0;border-top:2px solid var(--border)">
+            <span style="font-weight:700;font-size:15px">الإجمالي</span>
+            <span id="summary-total" style="font-weight:800;font-size:18px;color:var(--primary)">₪0.00</span>
+          </div>
+        </div>
+
+      </div><!-- /checkout-layout -->
+    </main>
+  </div>
+
+  <!-- Success Modal -->
+  <div class="modal-overlay" id="success-modal">
+    <div class="modal" style="max-width:440px;text-align:center">
+      <div style="padding:36px 28px">
+        <div style="font-size:56px;margin-bottom:14px">✅</div>
+        <h2 style="font-size:20px;font-weight:800;color:var(--success);margin-bottom:8px">
+          تم إرسال طلبك بنجاح!
+        </h2>
+        <div style="font-size:15px;color:var(--text-muted);margin-bottom:8px">
+          رقم الطلب: <strong id="order-number" style="color:var(--text)"></strong>
+        </div>
+        <p id="success-note" style="font-size:13px;color:var(--text-muted);margin-bottom:26px;line-height:1.6"></p>
+        <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+          <a href="orders.html" class="btn btn-primary">عرض طلباتي</a>
+          <a href="dashboard.html" class="btn btn-outline">العودة للرئيسية</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/firebase-config.js"></script>
+  <script src="../js/mock-data.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/cart.js"></script>
+  <script src="../js/user/sidebar.js"></script>
+  <script src="../js/user/checkout.js"></script>
+  <script>initAuth('user', () => { renderUserSidebar(); initCheckout(); });</script>
+</body>
+</html>

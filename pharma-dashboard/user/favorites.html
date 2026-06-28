@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PharmacyLink — المفضلة</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/main.css"><link rel="stylesheet" href="../css/sidebar.css">
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+</head>
+<body>
+  <div class="page-loading" id="loading-overlay"><div class="spinner"></div><p>جاري التحميل...</p></div>
+  <div id="app-content" style="display:none">
+    <div id="sidebar-container"></div>
+    <button class="hamburger-btn" id="hamburger-btn"><span></span><span></span><span></span></button>
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+    <main class="main-content">
+      <div class="page-header"><h1>المفضلة</h1><p>الأدوية والصيدليات المفضلة لديك</p></div>
+
+      <div class="two-col">
+        <!-- Favorite Medicines -->
+        <div class="card">
+          <div class="section-header"><h2>الأدوية المفضلة</h2><span class="badge badge-outline" id="med-count">0</span></div>
+          <div id="fav-medicines" class="fav-grid"></div>
+        </div>
+
+        <!-- Favorite Pharmacies -->
+        <div class="card">
+          <div class="section-header"><h2>الصيدليات المفضلة</h2><span class="badge badge-outline" id="ph-count">0</span></div>
+          <div id="fav-pharmacies" class="fav-grid"></div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="../js/firebase-config.js"></script>
+  <script src="../js/mock-data.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/cart.js"></script>
+  <script src="../js/user/sidebar.js"></script>
+  <script src="../js/user/favorites.js"></script>
+  <script>initAuth('user', () => { renderUserSidebar(); initFavorites(); });</script>
+</body>
+</html>

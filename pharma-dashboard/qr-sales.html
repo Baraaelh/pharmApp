@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PharmacyLink — QR Sales</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/sidebar.css">
+
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+</head>
+<body>
+
+  <div class="page-loading" id="loading-overlay">
+    <div class="spinner"></div>
+    <p>Loading…</p>
+  </div>
+
+  <div class="app-layout" id="app-content" style="display:none">
+    <div id="sidebar-container"></div>
+    <button class="hamburger" id="hamburger" aria-label="Open menu">
+      <span></span><span></span><span></span>
+    </button>
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+    <main class="main-content">
+      <div class="page-header">
+        <h1>QR Sales</h1>
+        <p>Scan product barcodes to add to sale</p>
+      </div>
+
+      <!-- ── Two Column Layout ── -->
+      <div class="qr-layout">
+
+        <!-- Left: Camera / Scanner -->
+        <div class="qr-camera-card">
+          <h3 style="font-size:15px;font-weight:600;margin-bottom:16px">QR / Barcode Scanner</h3>
+
+          <div class="qr-camera-box" id="qr-camera-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+              <circle cx="12" cy="13" r="4"/>
+            </svg>
+            <p style="text-align:center;font-size:13px;color:var(--text-muted)">Camera preview would appear here<br>in a production environment</p>
+          </div>
+
+          <div style="margin-top:16px;display:flex;flex-direction:column;gap:10px">
+            <button id="btn-simulate-scan" class="btn btn-primary" style="justify-content:center;gap:8px;padding:12px">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="5" y="5" width="3" height="3" fill="currentColor" stroke="none"/><rect x="16" y="5" width="3" height="3" fill="currentColor" stroke="none"/><rect x="16" y="16" width="3" height="3" fill="currentColor" stroke="none"/></svg>
+              Simulate Scan
+            </button>
+            <p id="qr-msg" style="text-align:center;font-size:13px;min-height:18px"></p>
+          </div>
+        </div>
+
+        <!-- Right: Current Sale -->
+        <div class="sale-card">
+          <div class="section-header" style="margin-bottom:14px">
+            <h2>Current Sale</h2>
+            <span class="badge badge-info" id="sale-count-badge">0 items</span>
+          </div>
+
+          <ul class="sale-items-list" id="sale-items-list">
+            <div class="no-sale">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>
+              <p>No items yet — simulate a scan to add products</p>
+            </div>
+          </ul>
+
+          <!-- Order Summary -->
+          <div class="order-summary-box">
+            <div class="order-summary-row">
+              <span>Subtotal</span>
+              <span id="summary-subtotal">₪0.00</span>
+            </div>
+            <div class="order-summary-row total">
+              <span>Total</span>
+              <span id="summary-total">₪0.00</span>
+            </div>
+          </div>
+
+          <!-- Sale Actions -->
+          <div class="sale-actions">
+            <button id="btn-clear-sale" class="btn btn-outline-danger" disabled>
+              Clear
+            </button>
+            <button id="btn-confirm-sale" class="btn btn-primary" disabled>
+              ✓ Confirm Sale
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Today's Sales ── -->
+      <div class="card">
+        <div class="section-header">
+          <h2>Today's Sales</h2>
+          <div style="display:flex;gap:20px;align-items:center">
+            <span class="text-muted" style="font-size:13px"><strong id="today-total-count">0</strong> sales</span>
+            <span class="text-muted" style="font-size:13px">Revenue: <strong class="text-success" id="today-total-revenue">₪0.00</strong></span>
+          </div>
+        </div>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Items</th>
+                <th style="text-align:center">Qty</th>
+                <th>Total</th>
+                <th>Time</th>
+              </tr>
+            </thead>
+            <tbody id="today-sales-tbody">
+              <tr><td colspan="5"><div class="empty-state"><span class="empty-icon">🛒</span><p>No sales yet today</p></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="js/firebase-config.js"></script>
+  <script src="js/mock-data.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/sidebar.js"></script>
+  <script src="js/qr-sales.js"></script>
+  <script>
+    initAuthGuard(function () {
+      renderSidebar();
+      initQrSales();
+    });
+  </script>
+</body>
+</html>

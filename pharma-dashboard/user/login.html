@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PharmacyLink — تسجيل دخول المستخدم</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/main.css">
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+</head>
+<body>
+  <div class="auth-page">
+    <div class="auth-card">
+      <div class="auth-logo">
+        <span class="logo-emoji">💊</span>
+        <h1>PharmacyLink</h1>
+        <p>بوابة المستخدم</p>
+      </div>
+
+      <div id="demo-note" style="display:none;background:#F0FDF4;border:1px solid #BBF7D0;border-radius:8px;padding:10px 14px;font-size:12px;color:#166534;margin-bottom:16px;text-align:center">
+        🟢 <strong>وضع العرض</strong> — اضغط تسجيل الدخول بأي بيانات للمتابعة
+      </div>
+
+      <form id="login-form" novalidate>
+        <div class="form-group">
+          <label for="email">البريد الإلكتروني</label>
+          <input type="email" id="email" class="form-control" placeholder="user@example.com" autocomplete="email" required>
+        </div>
+        <div class="form-group">
+          <label for="password">كلمة المرور</label>
+          <input type="password" id="password" class="form-control" placeholder="••••••••" autocomplete="current-password" required>
+        </div>
+        <div style="text-align:left;margin-bottom:12px">
+          <a href="#" id="forgot-link" style="font-size:13px;color:var(--primary)">نسيت كلمة المرور؟</a>
+        </div>
+        <button type="submit" id="login-btn" class="btn btn-primary btn-full btn-lg">تسجيل الدخول</button>
+        <p id="login-error" class="error-msg" style="text-align:center;min-height:20px;margin-top:10px"></p>
+      </form>
+
+      <div id="forgot-form" style="display:none">
+        <p style="font-size:13px;color:var(--text-muted);margin-bottom:12px">أدخل بريدك الإلكتروني لإرسال رابط استعادة كلمة المرور.</p>
+        <div class="form-group"><input type="email" id="forgot-email" class="form-control" placeholder="بريدك الإلكتروني"></div>
+        <button id="btn-reset" class="btn btn-primary btn-full">إرسال رابط الاستعادة</button>
+        <p id="reset-msg" style="min-height:18px;margin-top:8px;text-align:center"></p>
+        <div style="text-align:center;margin-top:10px"><a href="#" id="back-login" style="font-size:13px;color:var(--primary)">← العودة لتسجيل الدخول</a></div>
+      </div>
+
+      <div class="auth-footer">
+        <p>ليس لديك حساب؟ <a href="register.html">إنشاء حساب</a></p>
+        <a href="../index.html" style="font-size:13px;color:var(--text-muted)">← العودة للرئيسية</a>
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/firebase-config.js"></script>
+  <script src="../js/mock-data.js"></script>
+  <script src="../js/auth.js"></script>
+  <script>
+    if (DEMO_MODE) document.getElementById('demo-note').style.display = 'block';
+
+    if (!DEMO_MODE) {
+      auth.onAuthStateChanged(async user => {
+        if (!user) return;
+        const snap = await db.collection('users').doc(user.uid).get().catch(() => null);
+        if (snap?.data()?.role === 'user') window.location.replace('dashboard.html');
+      });
+    }
+
+    document.getElementById('login-form').addEventListener('submit', e => {
+      e.preventDefault();
+      const email    = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+      if (!email || !password) { document.getElementById('login-error').textContent = 'يرجى ملء جميع الحقول.'; return; }
+      loginUser(email, password, 'user', 'login-error', document.getElementById('login-btn'));
+    });
+
+    document.getElementById('forgot-link')?.addEventListener('click', e => {
+      e.preventDefault();
+      document.getElementById('login-form').style.display  = 'none';
+      document.getElementById('forgot-form').style.display = 'block';
+    });
+
+    document.getElementById('back-login')?.addEventListener('click', e => {
+      e.preventDefault();
+      document.getElementById('login-form').style.display  = 'block';
+      document.getElementById('forgot-form').style.display = 'none';
+    });
+
+    document.getElementById('btn-reset')?.addEventListener('click', () => {
+      const email = document.getElementById('forgot-email').value.trim();
+      if (!email) { document.getElementById('reset-msg').textContent = 'يرجى إدخال البريد الإلكتروني.'; return; }
+      sendPasswordReset(email, 'reset-msg');
+    });
+  </script>
+</body>
+</html>

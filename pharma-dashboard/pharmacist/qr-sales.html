@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PharmacyLink — مبيعات QR</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/main.css"><link rel="stylesheet" href="../css/sidebar.css">
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+  <!-- QR / Barcode scanner (supports EAN-13, UPC, Code128, QR, DataMatrix…) -->
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+  <!-- QR code generator (for product QR labels) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+  <style>
+    /* ── Camera Modal ─────────────────────────────── */
+    .camera-modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,.75);
+      z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 16px;
+      opacity: 0; visibility: hidden; transition: opacity .2s, visibility .2s;
+    }
+    .camera-modal-overlay.active { opacity: 1; visibility: visible; }
+    .camera-modal {
+      background: #111; border-radius: 18px; width: 100%; max-width: 420px;
+      overflow: hidden; box-shadow: 0 30px 80px rgba(0,0,0,.5);
+    }
+    .camera-modal-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 18px; background: #1a1a1a;
+    }
+    .camera-modal-header span { color: white; font-weight: 600; font-size: 15px; }
+    .camera-modal-header button { background: rgba(255,255,255,.15); border: none; color: white; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; transition: background .15s; }
+    .camera-modal-header button:hover { background: rgba(255,255,255,.25); }
+
+    /* html5-qrcode renders inside this div */
+    #qr-reader { width: 100%; }
+    #qr-reader video { width: 100% !important; border-radius: 0; }
+    #qr-reader__scan_region { position: relative; }
+    /* hide the default html5-qrcode UI clutter */
+    #qr-reader__header_message,
+    #qr-reader__status_span,
+    #qr-reader__filescan_input { display: none !important; }
+    #qr-reader__dashboard_section_swaplink { color: white !important; font-size: 12px; }
+
+    .camera-scan-hint {
+      text-align: center; padding: 10px 16px; background: #1a1a1a; color: rgba(255,255,255,.7);
+      font-size: 12px; display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .scan-pulse { width: 10px; height: 10px; background: #22C55E; border-radius: 50%; animation: scanPulse 1.2s infinite; }
+    @keyframes scanPulse { 0%,100%{ opacity:1; transform:scale(1) } 50%{ opacity:.4; transform:scale(.8) } }
+
+    .camera-manual-input {
+      padding: 12px 16px; background: #222; display: flex; gap: 8px; align-items: center;
+    }
+    .camera-manual-input input {
+      flex: 1; background: #333; border: 1px solid #444; border-radius: 8px;
+      color: white; padding: 8px 12px; font-size: 13px; outline: none; font-family: inherit;
+      text-align: center; letter-spacing: 1px; direction: ltr;
+    }
+    .camera-manual-input input::placeholder { color: #888; }
+    .camera-manual-input input:focus { border-color: var(--primary); }
+    .camera-manual-input button { background: var(--primary); color: white; border: none; border-radius: 8px; padding: 8px 14px; cursor: pointer; font-size: 13px; font-weight: 600; white-space: nowrap; }
+
+    .camera-bottom-bar { display: flex; gap: 10px; padding: 12px 16px; background: #1a1a1a; }
+    .cam-btn { flex: 1; padding: 10px; border: none; border-radius: 10px; cursor: pointer; font-size: 13px; font-weight: 600; font-family: inherit; transition: all .15s; }
+    .cam-btn-switch { background: rgba(255,255,255,.1); color: white; }
+    .cam-btn-switch:hover { background: rgba(255,255,255,.18); }
+    .cam-btn-close  { background: #EF4444; color: white; }
+    .cam-btn-close:hover { background: #dc2626; }
+
+    /* Scan success flash */
+    .scan-success-flash { position: fixed; inset: 0; background: rgba(34,197,94,.3); z-index: 3000; pointer-events: none; opacity: 0; transition: opacity .1s; }
+    .scan-success-flash.show { opacity: 1; }
+
+    /* Product QR Modal */
+    .product-qr-modal { background: white; border-radius: 16px; padding: 28px; text-align: center; max-width: 300px; width: 100%; }
+    .product-qr-modal h3 { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
+    .product-qr-modal p  { font-size: 12px; color: var(--text-muted); margin-bottom: 16px; }
+    #qr-code-display canvas, #qr-code-display img { margin: 0 auto; display: block !important; border-radius: 8px; }
+
+    /* QR button on product card */
+    .qp-qr-btn {
+      position: absolute; top: 6px; left: 6px;
+      background: var(--primary); color: white; border: none;
+      border-radius: 6px; width: 26px; height: 26px; font-size: 13px;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      opacity: 0; transition: opacity .15s;
+    }
+    .qr-product-card { position: relative; }
+    .qr-product-card:hover .qp-qr-btn { opacity: 1; }
+  </style>
+</head>
+<body>
+  <!-- Scan success flash overlay -->
+  <div class="scan-success-flash" id="scan-flash"></div>
+
+  <div class="page-loading" id="loading-overlay"><div class="spinner"></div><p>جاري التحميل...</p></div>
+  <div id="app-content" style="display:none">
+    <div id="sidebar-container"></div>
+    <button class="hamburger-btn" id="hamburger-btn"><span></span><span></span><span></span></button>
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+    <main class="main-content">
+      <div class="page-header"><h1>نقطة البيع — QR</h1><p>مسح الباركود أو QR لإضافة المنتجات فورياً</p></div>
+
+      <div class="qr-layout">
+        <!-- Product Panel -->
+        <div class="card qr-products-panel">
+          <div class="section-header"><h2>المنتجات</h2><span style="font-size:12px;color:var(--text-muted)">اضغط QR لعرض رمز المنتج</span></div>
+
+          <!-- Search + Scan button -->
+          <div style="display:flex;gap:8px;margin-bottom:14px">
+            <button id="btn-open-camera" class="btn btn-primary" style="white-space:nowrap;gap:6px">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                <path d="M23 7V3h-4M1 7V3h4M23 17v4h-4M1 17v4h4"/>
+                <rect x="7" y="7" width="10" height="10" rx="2"/>
+              </svg>
+              مسح QR / باركود
+            </button>
+            <div class="search-box" style="flex:1">
+              <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+              <input type="text" id="qr-search" class="form-control" placeholder="بحث يدوي...">
+            </div>
+          </div>
+
+          <div id="qr-product-list" class="qr-product-grid"></div>
+        </div>
+
+        <!-- Cart Panel -->
+        <div class="card qr-cart-panel">
+          <div class="section-header"><h2>سلة البيع</h2><span class="badge badge-primary" id="cart-count">0</span></div>
+          <ul id="cart-items" style="list-style:none;padding:0;margin:0;flex:1;overflow-y:auto;min-height:120px"></ul>
+          <div class="qr-totals">
+            <div class="qr-total-row"><span>المجموع الفرعي</span><span id="cart-sub">₪0.00</span></div>
+            <div class="qr-total-row"><span>ضريبة (0%)</span><span>₪0.00</span></div>
+            <div class="qr-total-row total-main"><span>الإجمالي</span><span id="cart-total">₪0.00</span></div>
+          </div>
+          <button id="btn-checkout" class="btn btn-primary btn-full btn-lg" style="margin-top:12px" disabled>إتمام البيع</button>
+          <button id="btn-clear-cart" class="btn btn-ghost btn-full" style="margin-top:6px">مسح السلة</button>
+        </div>
+      </div>
+
+      <!-- Recent Sales -->
+      <div class="card" style="margin-top:24px">
+        <div class="section-header"><h2>آخر المبيعات</h2></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>رقم الفاتورة</th><th>المنتجات</th><th>الإجمالي</th><th>الوقت</th></tr></thead>
+            <tbody id="qr-history-body"><tr><td colspan="4"><div class="loading-state"><div class="spinner"></div></div></td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- ── Camera Scan Modal ─────────────────────────────── -->
+  <div class="camera-modal-overlay" id="camera-modal">
+    <div class="camera-modal">
+      <div class="camera-modal-header">
+        <span>🔲 مسح QR / باركود</span>
+        <button id="btn-close-camera" title="إغلاق">✕</button>
+      </div>
+
+      <!-- html5-qrcode renders here -->
+      <div id="qr-reader"></div>
+
+      <div class="camera-scan-hint">
+        <div class="scan-pulse"></div>
+        <span id="scan-hint-text">وجّه الكاميرا نحو باركود المنتج أو رمز QR</span>
+      </div>
+
+      <!-- Manual / hardware scanner input -->
+      <div class="camera-manual-input">
+        <input type="text" id="barcode-manual-input" placeholder="أو اكتب الباركود يدوياً..." autocomplete="off" dir="ltr">
+        <button id="btn-manual-submit">إضافة</button>
+      </div>
+
+      <div class="camera-bottom-bar">
+        <button class="cam-btn cam-btn-switch" id="btn-switch-camera">🔄 تبديل الكاميرا</button>
+        <button class="cam-btn cam-btn-close" id="btn-stop-camera">✕ إغلاق</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Product QR Code Modal ─────────────────────────── -->
+  <div class="modal-overlay" id="product-qr-modal">
+    <div class="modal" style="max-width:300px">
+      <div class="modal-header">
+        <h3 id="product-qr-title">رمز QR للمنتج</h3>
+        <button class="modal-close" id="product-qr-close">✕</button>
+      </div>
+      <div class="modal-body" style="text-align:center">
+        <div id="qr-code-display" style="display:inline-block;padding:12px;background:white;border-radius:8px;border:1px solid var(--border)"></div>
+        <p id="product-qr-name" style="margin-top:14px;font-weight:600;font-size:14px"></p>
+        <p style="font-size:12px;color:var(--text-muted);margin-top:4px">امسح هذا الرمز بالكاميرا لإضافة المنتج للسلة</p>
+        <p id="product-qr-id" style="font-size:11px;color:var(--text-muted);margin-top:4px;font-family:monospace"></p>
+      </div>
+      <div class="modal-footer"><button class="btn btn-primary btn-full" id="product-qr-close-btn">إغلاق</button></div>
+    </div>
+  </div>
+
+  <!-- ── Receipt Modal ─────────────────────────────────── -->
+  <div class="modal-overlay" id="receipt-modal">
+    <div class="modal">
+      <div class="modal-header"><h3>فاتورة البيع</h3><button class="modal-close" id="receipt-close">✕</button></div>
+      <div class="modal-body" id="receipt-body"></div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="document.getElementById('receipt-modal').classList.remove('active')">إغلاق</button>
+        <button class="btn btn-primary" onclick="window.print()">🖨️ طباعة</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/firebase-config.js"></script>
+  <script src="../js/mock-data.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/pharmacist/sidebar.js"></script>
+  <script src="../js/pharmacist/qr-sales.js"></script>
+  <script>initAuth('pharmacist', () => { renderPharmacistSidebar(); initQrSales(); });</script>
+</body>
+</html>

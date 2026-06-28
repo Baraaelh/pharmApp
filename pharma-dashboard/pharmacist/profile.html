@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PharmacyLink — الملف الشخصي</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/main.css"><link rel="stylesheet" href="../css/sidebar.css">
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+</head>
+<body>
+  <div class="page-loading" id="loading-overlay"><div class="spinner"></div><p>جاري التحميل...</p></div>
+  <div id="app-content" style="display:none">
+    <div id="sidebar-container"></div>
+    <button class="hamburger-btn" id="hamburger-btn"><span></span><span></span><span></span></button>
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+    <main class="main-content">
+      <div class="page-header"><h1>الملف الشخصي</h1><p>إعدادات الحساب ومعلومات الصيدلية</p></div>
+
+      <div class="two-col">
+        <!-- Personal Info -->
+        <div class="card">
+          <div class="section-header"><h2>المعلومات الشخصية</h2></div>
+          <form id="profile-form" novalidate>
+            <div class="profile-avatar-wrap">
+              <div class="profile-avatar" id="prof-avatar"></div>
+              <div>
+                <div id="prof-name-display" style="font-size:18px;font-weight:700"></div>
+                <div id="prof-email-display" style="color:var(--text-muted);font-size:13px"></div>
+              </div>
+            </div>
+            <div class="form-group" style="margin-top:20px">
+              <label>الاسم</label>
+              <input type="text" id="f-name" class="form-control">
+            </div>
+            <div class="form-group">
+              <label>البريد الإلكتروني</label>
+              <input type="email" id="f-email" class="form-control" disabled style="opacity:.6">
+            </div>
+            <div class="form-group">
+              <label>رقم الهاتف</label>
+              <input type="tel" id="f-phone" class="form-control" placeholder="05XXXXXXXX">
+            </div>
+            <p id="profile-msg" style="min-height:18px"></p>
+            <button type="submit" class="btn btn-primary">حفظ التغييرات</button>
+          </form>
+        </div>
+
+        <!-- Pharmacy Info -->
+        <div class="card">
+          <div class="section-header"><h2>معلومات الصيدلية</h2></div>
+          <form id="pharmacy-form" novalidate>
+            <div class="form-group">
+              <label>اسم الصيدلية</label>
+              <input type="text" id="f-pharm-name" class="form-control" placeholder="صيدلية ...">
+            </div>
+            <div class="form-group">
+              <label>المحافظة</label>
+              <select id="f-gov" class="form-control">
+                <option value="">اختر المحافظة</option>
+                <option>نابلس</option><option>رام الله</option><option>جنين</option>
+                <option>الخليل</option><option>بيت لحم</option><option>طولكرم</option>
+                <option>قلقيلية</option><option>أريحا</option><option>سلفيت</option><option>أخرى</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>العنوان التفصيلي</label>
+              <input type="text" id="f-address" class="form-control" placeholder="الشارع، المبنى...">
+            </div>
+            <div class="form-group">
+              <label>ساعات العمل</label>
+              <div class="hours-grid" id="hours-grid"></div>
+            </div>
+            <p id="pharmacy-msg" style="min-height:18px"></p>
+            <button type="submit" class="btn btn-primary">حفظ معلومات الصيدلية</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Password Change -->
+      <div class="card" style="margin-top:24px;max-width:480px">
+        <div class="section-header"><h2>تغيير كلمة المرور</h2></div>
+        <form id="pw-form" novalidate>
+          <div class="form-group"><label>كلمة المرور الحالية</label><input type="password" id="f-cur-pw" class="form-control" placeholder="••••••••"></div>
+          <div class="form-group"><label>كلمة المرور الجديدة</label><input type="password" id="f-new-pw" class="form-control" placeholder="8 أحرف على الأقل"></div>
+          <div class="form-group"><label>تأكيد كلمة المرور</label><input type="password" id="f-conf-pw" class="form-control" placeholder="••••••••"></div>
+          <p id="pw-msg" style="min-height:18px"></p>
+          <button type="submit" class="btn btn-primary">تغيير كلمة المرور</button>
+        </form>
+      </div>
+    </main>
+  </div>
+
+  <script src="../js/firebase-config.js"></script>
+  <script src="../js/mock-data.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/pharmacist/sidebar.js"></script>
+  <script src="../js/pharmacist/profile.js"></script>
+  <script>initAuth('pharmacist', () => { renderPharmacistSidebar(); initPharmacistProfile(); });</script>
+</body>
+</html>

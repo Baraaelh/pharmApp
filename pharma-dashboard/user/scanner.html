@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PharmacyLink — مسح الروشتة</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/main.css">
+  <link rel="stylesheet" href="../css/sidebar.css">
+  <link rel="stylesheet" href="../css/chat.css">
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+</head>
+<body>
+  <div class="page-loading" id="loading-overlay"><div class="spinner"></div><p>جاري التحميل...</p></div>
+  <div id="app-content" style="display:none">
+    <div id="sidebar-container"></div>
+    <button class="hamburger-btn" id="hamburger-btn"><span></span><span></span><span></span></button>
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+    <main class="main-content">
+      <div class="page-header"><h1>مسح الروشتة</h1><p>ارفع صورة الوصفة الطبية وسنستخرج الأدوية تلقائياً</p></div>
+
+      <div class="scanner-layout">
+        <!-- Upload Area -->
+        <div class="card">
+          <div class="upload-zone" id="upload-zone">
+            <div class="upload-zone-inner" id="upload-zone-inner">
+              <div class="upload-icon">🔍</div>
+              <p class="upload-title">اسحب صورة الروشتة هنا</p>
+              <p class="upload-sub">أو اضغط لرفع ملف</p>
+              <p class="upload-types">JPG, PNG, PDF حتى 10 ميجابايت</p>
+            </div>
+            <img id="preview-img" class="upload-preview" style="display:none">
+            <input type="file" id="file-input" accept="image/*,application/pdf" style="display:none">
+          </div>
+          <div style="display:flex;gap:10px;margin-top:12px">
+            <button id="btn-scan" class="btn btn-primary btn-full" disabled>🔍 استخراج الأدوية</button>
+            <button id="btn-clear" class="btn btn-ghost" style="display:none">مسح</button>
+          </div>
+        </div>
+
+        <!-- Results -->
+        <div class="card" id="results-card">
+          <div class="section-header"><h2>الأدوية المستخرجة</h2><span class="badge badge-outline" id="med-count">0</span></div>
+          <div id="scan-status" style="color:var(--text-muted);font-size:13px;margin-bottom:12px"></div>
+          <div id="medicine-results" class="medicine-results">
+            <div class="scan-placeholder">
+              <div style="font-size:40px;margin-bottom:8px">📋</div>
+              <p>قم برفع صورة روشتة للبدء</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="../js/firebase-config.js"></script>
+  <script src="../js/mock-data.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/openai.js"></script>
+  <script src="../js/user/sidebar.js"></script>
+  <script src="../js/user/scanner.js"></script>
+  <script>initAuth('user', () => { renderUserSidebar(); initScanner(); });</script>
+</body>
+</html>

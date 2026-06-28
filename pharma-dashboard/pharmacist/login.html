@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PharmacyLink — بوابة الصيدلاني</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/main.css">
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+</head>
+<body>
+  <div class="auth-page">
+    <div class="auth-card">
+      <div class="auth-logo">
+        <span class="logo-emoji">💊</span>
+        <h1>PharmacyLink</h1>
+        <p>بوابة الصيدلاني</p>
+      </div>
+
+      <div id="demo-note" style="display:none;background:#F0FDF4;border:1px solid #BBF7D0;border-radius:8px;padding:10px 14px;font-size:12px;color:#166534;margin-bottom:16px;text-align:center">
+        🟢 <strong>وضع العرض</strong> — اضغط تسجيل الدخول بأي بيانات للمتابعة
+      </div>
+
+      <form id="login-form" novalidate>
+        <div class="form-group">
+          <label for="email">البريد الإلكتروني</label>
+          <input type="email" id="email" class="form-control" placeholder="pharmacist@example.com" autocomplete="email" required>
+        </div>
+        <div class="form-group">
+          <label for="password">كلمة المرور</label>
+          <input type="password" id="password" class="form-control" placeholder="••••••••" autocomplete="current-password" required>
+        </div>
+        <button type="submit" id="login-btn" class="btn btn-primary btn-full btn-lg" style="margin-top:4px">
+          تسجيل الدخول
+        </button>
+        <p id="login-error" class="error-msg" style="text-align:center;min-height:20px;margin-top:10px"></p>
+      </form>
+
+      <div class="auth-back" style="display:flex;flex-direction:column;gap:8px;text-align:center">
+        <span>ليس لديك حساب صيدلاني؟ <a href="register.html" style="color:var(--primary);font-weight:600">تسجيل صيدلية جديدة</a></span>
+        <a href="../index.html" style="font-size:13px;color:var(--text-muted)">← العودة للرئيسية</a>
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/firebase-config.js"></script>
+  <script src="../js/mock-data.js"></script>
+  <script src="../js/auth.js"></script>
+  <script>
+    if (DEMO_MODE) document.getElementById('demo-note').style.display = 'block';
+
+    // Redirect if already logged in
+    if (!DEMO_MODE) {
+      auth.onAuthStateChanged(async user => {
+        if (!user) return;
+        const snap = await db.collection('users').doc(user.uid).get().catch(()=>null);
+        if (snap?.data()?.role === 'pharmacist') window.location.replace('dashboard.html');
+      });
+    }
+
+    document.getElementById('login-form').addEventListener('submit', e => {
+      e.preventDefault();
+      const email    = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+      if (!email || !password) {
+        document.getElementById('login-error').textContent = 'يرجى ملء جميع الحقول.';
+        return;
+      }
+      loginUser(email, password, 'pharmacist', 'login-error', document.getElementById('login-btn'));
+    });
+  </script>
+</body>
+</html>
